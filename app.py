@@ -16,23 +16,30 @@ app = Flask(__name__)
 
 # ---------------- Embeddings ----------------
 
-embeddings = HuggingFaceEmbeddings(
-    model_name=Config.EMBEDDING_MODEL
-)
+embeddings = None
+vectordb = None
+llm = None
 
-# ---------------- Vector DB ----------------
+def load_models():
+    global embeddings, vectordb, llm
 
-vectordb = Chroma(
-    persist_directory=Config.VECTOR_DB_PATH,
-    embedding_function=embeddings
-)
+    if embeddings is None:
+        embeddings = HuggingFaceEmbeddings(
+            model_name=Config.EMBEDDING_MODEL
+        )
 
-# ---------------- LLM ----------------
+    if vectordb is None:
+        vectordb = Chroma(
+            persist_directory=Config.VECTOR_DB_PATH,
+            embedding_function=embeddings
+        )
 
-llm = ChatGroq(
-    model="llama-3.1-8b-instant",
-    temperature=0
-)
+    if llm is None:
+        llm = ChatGroq(
+            model="llama-3.1-8b-instant",
+            temperature=0
+        )
+
 
 # ---------------- Home ----------------
 
@@ -67,8 +74,9 @@ def upload_document():
 @app.route("/ask", methods=["POST"])
 def ask_ai():
 
-    data = request.get_json()
+    load_models()
 
+    data = request.get_json()
     question = data.get("question")
 
     docs = vectordb.similarity_search_with_score(question, k=3)
@@ -103,8 +111,6 @@ def ask_ai():
         "answer": answer,
         "sources": list(set(sources))
     })
-
-
 # ---------------- Run ----------------
 
 if __name__ == "__main__":
