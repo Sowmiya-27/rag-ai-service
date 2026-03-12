@@ -30,7 +30,8 @@ def load_models():
 
     if embeddings is None:
         embeddings = HuggingFaceEmbeddings(
-            model_name=Config.EMBEDDING_MODEL
+            model_name=Config.EMBEDDING_MODEL,
+            model_kwargs={"device": "cpu"}
         )
 
     if vectordb is None:
