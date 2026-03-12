@@ -73,12 +73,12 @@ def upload_document():
 
     file.save(save_path)
 
-    ingest_document(save_path)
+    load_models()
+    ingest_document(save_path, embeddings)
 
     return jsonify({
         "message": "Document uploaded and indexed"
     })
-
 # ---------------- Ask Question ----------------
 
 @app.route("/ask", methods=["POST"])

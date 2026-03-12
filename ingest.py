@@ -1,15 +1,12 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-
 from config import Config
 
 
-def ingest_document(file_path):
+def ingest_document(file_path, embeddings):
 
     loader = PyPDFLoader(file_path)
-
     docs = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(
@@ -18,10 +15,6 @@ def ingest_document(file_path):
     )
 
     chunks = splitter.split_documents(docs)
-
-    embeddings = HuggingFaceEmbeddings(
-        model_name=Config.EMBEDDING_MODEL
-    )
 
     vectordb = Chroma.from_documents(
         chunks,
