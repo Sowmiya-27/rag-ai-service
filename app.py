@@ -40,8 +40,7 @@ def load_models():
             temperature=0
         )
 
-# Load models when server starts
-load_models()
+
 
 # ---------------- Home ----------------
 
@@ -80,13 +79,16 @@ def upload_document():
 @app.route("/ask", methods=["POST"])
 def ask_ai():
 
+    # Load models when server starts
+    load_models()
+
     data = request.get_json() or {}
     question = data.get("question","").strip()
 
     if not question:
         return jsonify({"error":"Question required"}),400
 
-    docs = vectordb.similarity_search_with_score(question, k=3)
+    docs = vectordb.similarity_search_with_score(question, k=3) if vectordb else []
 
     docs = [d for d in docs if d[1] < 2]
 
