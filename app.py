@@ -14,7 +14,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ---------------- Embeddings ----------------
+# ---------------- Models ----------------
 
 embeddings = None
 vectordb = None
@@ -40,13 +40,20 @@ def load_models():
             temperature=0
         )
 
+# Load models when server starts
+load_models()
 
 # ---------------- Home ----------------
 
 @app.route("/")
 def home():
-
     return "AI RAG Service Running"
+
+# ---------------- Health ----------------
+
+@app.route("/health")
+def health():
+    return "AI Service OK"
 
 # ---------------- Upload Document ----------------
 
@@ -68,16 +75,16 @@ def upload_document():
         "message": "Document uploaded and indexed"
     })
 
-
 # ---------------- Ask Question ----------------
 
 @app.route("/ask", methods=["POST"])
 def ask_ai():
 
-    load_models()
+    data = request.get_json() or {}
+    question = data.get("question","").strip()
 
-    data = request.get_json()
-    question = data.get("question")
+    if not question:
+        return jsonify({"error":"Question required"}),400
 
     docs = vectordb.similarity_search_with_score(question, k=3)
 
@@ -86,7 +93,7 @@ def ask_ai():
     if not docs:
 
         answer = llm.invoke([
-            SystemMessage(content="Answer using general knowledge"),
+            SystemMessage(content="Answer briefly using general knowledge"),
             HumanMessage(content=question)
         ]).content
 
@@ -95,22 +102,25 @@ def ask_ai():
             "source": "general knowledge"
         })
 
-    context = "\n".join(d[0].page_content for d in docs)
+    context = "\n".join(d[0].page_content[:1000] for d in docs)
 
     answer = llm.invoke([
-        SystemMessage(content="Answer only from context"),
-        HumanMessage(content=f"{context}\nQuestion:{question}")
+        SystemMessage(content="""
+You are a document assistant.
+Answer only from the given context.
+If answer not found say 'Not found in document'.
+Keep answer short.
+"""),
+        HumanMessage(content=f"Context:\n{context}\n\nQuestion:{question}")
     ]).content
 
-    sources = []
-
-    for d,_ in docs:
-        sources.append(d.metadata.get("source","Unknown"))
+    sources = list(set(d[0].metadata.get("source","Unknown") for d in docs))
 
     return jsonify({
         "answer": answer,
-        "sources": list(set(sources))
+        "sources": sources
     })
+
 # ---------------- Run ----------------
 
 if __name__ == "__main__":
