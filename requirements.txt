@@ -1,11 +1,12 @@
 flask
+gunicorn
 langchain
 langchain-community
-langchain-core
 langchain-groq
-sentence-transformers
 chromadb
-python-dotenv
+sentence-transformers
 pypdf
-gunicorn
-langchain-text-splitters
+python-docx
+python-dotenv
+requests
+torch --index-url https://download.pytorch.org/whl/cpu
