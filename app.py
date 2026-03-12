@@ -12,7 +12,12 @@ from config import Config
 
 load_dotenv()
 
+print("RAG AI Service Starting...")
+
 app = Flask(__name__)
+
+os.makedirs(Config.DATA_PATH, exist_ok=True)
+os.makedirs(Config.VECTOR_DB_PATH, exist_ok=True)
 
 # ---------------- Models ----------------
 

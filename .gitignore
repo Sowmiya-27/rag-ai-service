@@ -12,3 +12,5 @@ chat_store.json
 chroma_db/
 docs/chroma/
 feedback/
+__pycache__/
+.env
